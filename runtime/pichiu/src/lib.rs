@@ -120,6 +120,26 @@ const MAXIMUM_BLOCK_WEIGHT: Weight = WEIGHT_PER_SECOND / 2;
 
 pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 
+pub struct EnsurePichiuFoundation;
+impl EnsureOrigin<Origin> for EnsurePichiuFoundation {
+	type Success = AccountId;
+
+	fn try_origin(o: Origin) -> Result<Self::Success, Origin> {
+		Into::<Result<RawOrigin<AccountId>, Origin>>::into(o).and_then(|o| match o {
+			RawOrigin::Signed(caller) => {
+				Ok(caller)
+			}
+			r => Err(Origin::from(r)),
+		})
+	}
+
+	#[cfg(feature = "runtime-benchmarks")]
+	fn successful_origin() -> Origin {
+		Origin::from(RawOrigin::Signed(Default::default()))
+	}
+}
+
+
 parameter_types! {
 	pub const BlockHashCount: BlockNumber = 250;
 	pub const Version: RuntimeVersion = VERSION;
@@ -812,6 +832,9 @@ impl_runtime_apis! {
 		}
 	}
 }
+
+
+
 
 struct CheckInherents;
 

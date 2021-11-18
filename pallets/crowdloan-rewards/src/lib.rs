@@ -61,8 +61,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use pallet::*;
-#[cfg(any(test, feature = "runtime-benchmarks"))]
-mod benchmarks;
+// #[cfg(any(test, feature = "runtime-benchmarks"))]
+// mod benchmarks;
 #[cfg(test)]
 pub(crate) mod mock;
 #[cfg(test)]

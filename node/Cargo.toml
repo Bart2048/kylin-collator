@@ -20,6 +20,8 @@ default = []
 runtime-benchmarks = [
 	"pichiu-runtime/runtime-benchmarks",
 	"development-runtime/runtime-benchmarks",
+	"runtime-common/runtime-benchmarks",
+
 ]
 
 [dependencies]
