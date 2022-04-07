@@ -24,17 +24,17 @@ runtime-benchmarks = [
 ]
 
 [dependencies]
-derive_more = "0.15.0"
-exit-future = "0.1.4"
-futures = { version = "0.3.1", features = ["compat"] }
-log = "0.4.8"
-parking_lot = "0.10.2"
-trie-root = "0.15.2"
-codec = { package = "parity-scale-codec", version = "2.0.0" }
-structopt = "0.3.3"
-serde = { version = "1.0.101", features = ["derive"] }
-hex-literal = "0.2.1"
-async-trait = "0.1.42"
+derive_more = "0.99.17"
+exit-future = "0.2.0"
+futures = { version = "0.3.21", features = ["compat"] }
+log = "0.4.16"
+parking_lot = "0.12.0"
+trie-root = "0.17.0"
+codec = { package = "parity-scale-codec", version = "3.1.2" }
+structopt = "0.3.17"
+serde = { version = "1.0.136", features = ["derive"] }
+hex-literal = "0.3.4"
+async-trait = "0.1.53"
 
 # Parachain runtimes
 development-runtime = { path = '../runtime/development' }

@@ -129,13 +129,14 @@ pub mod pallet {
 			+ Into<AccountId32>
 			+ From<AccountId32>
 			+ TypeInfo
-			+ Ord;
+			+ Ord
+			+ MaxEncodedLen;
 
 		// The origin that is allowed to change the reward address with relay signatures
 		type RewardAddressChangeOrigin: EnsureOrigin<Self::Origin>;
 
 		/// The type that will be used to track vesting progress
-		type VestingBlockNumber: AtLeast32BitUnsigned + Parameter + Default + Into<BalanceOf<Self>>;
+		type VestingBlockNumber: AtLeast32BitUnsigned + Parameter + Default + Into<BalanceOf<Self>> + MaxEncodedLen;
 
 		/// The notion of time that will be used for vesting. Probably
 		/// either the relay chain or sovereign chain block number.
@@ -763,7 +764,7 @@ pub type BalanceOf<T> = <<T as Config>::RewardCurrency as Currency<
 /// Stores info about the rewards owed as well as how much has been vested so far.
 /// For a primer on this kind of design, see the recipe on compounding interest
 /// https://substrate.dev/recipes/fixed-point.html#continuously-compounding
-#[derive(Clone, PartialEq, Eq, Encode, Decode, Default, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, Default, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct RewardInfo<T: Config> {

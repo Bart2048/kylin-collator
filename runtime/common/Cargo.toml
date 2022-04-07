@@ -21,7 +21,7 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkad
 sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.3.1"
+hex-literal = "0.3.4"
 hex = "0.4.3"
 
 [build-dependencies]

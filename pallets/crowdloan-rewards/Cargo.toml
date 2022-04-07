@@ -6,11 +6,11 @@ version = '0.6.0'
 description = "Reward citizens who participated in a crowdloan to acquire a parachain slot o nthe backing relay chain."
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
-serde = { version = "1.0.101", optional = true, features = ["derive"], default-features = false }
-log = { version = "0.4", default-features = false }
-scale-info = { version = "1.0", default-features = false, features = ["derive"] }
-
+codec = { package = "parity-scale-codec", version = "3.1.2", default-features = false }
+serde = { version = "1.0.136", optional = true, features = ["derive"], default-features = false }
+log = { version = "0.4.16", default-features = false }
+scale-info = { version = "2.0.0", default-features = false, features = ["derive"] }
+ed25519-dalek = { version = "1.0.1", default-features = false, features = ["u64_backend", "alloc"], optional = true }
 
 frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false }
@@ -21,7 +21,6 @@ sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false }
 pallet-utility = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false }
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false, optional = true }
-ed25519-dalek = { version = "1.0.1", default-features = false, features = ["u64_backend", "alloc"], optional = true }
 sp-trie = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false , optional = true }
 
 cumulus-primitives-core = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.18", default-features = false, optional = true }
