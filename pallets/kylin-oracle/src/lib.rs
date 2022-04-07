@@ -194,7 +194,7 @@ pub mod pallet {
             // This ensures that the function can only be called via unsigned transaction.
             ensure_none(origin)?;
             for key in processed_requests.iter() {
-                <ApiQueue<T>>::remove(&key);
+                <ApiQueue<T>>::remove(key);
             }
             Ok(().into())
         }
@@ -210,7 +210,7 @@ pub mod pallet {
             let block_number = <system::Pallet<T>>::block_number();
             let current_timestamp = T::UnixTime::now().as_millis();
             for key in processed_requests.iter() {
-                if SavedRequests::<T>::contains_key(key.clone()) {
+                if SavedRequests::<T: StorageMap::contains_key>::contains_key(key.clone()) {
                     let saved_request = Self::saved_data_requests(key);
                     let processed_request = DataRequest {
                         para_id: saved_request.para_id,
