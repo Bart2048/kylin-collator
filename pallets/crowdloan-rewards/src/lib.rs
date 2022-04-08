@@ -764,7 +764,7 @@ pub type BalanceOf<T> = <<T as Config>::RewardCurrency as Currency<
 /// Stores info about the rewards owed as well as how much has been vested so far.
 /// For a primer on this kind of design, see the recipe on compounding interest
 /// https://substrate.dev/recipes/fixed-point.html#continuously-compounding
-#[derive(Clone, PartialEq, Eq, Encode, Decode, Default, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, Default, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct RewardInfo<T: Config> {
