@@ -100,7 +100,7 @@ pub mod pallet {
     pub trait Config:
         CreateSignedTransaction<Call<Self>> + frame_system::Config + pallet_balances::Config
     where
-        <Self as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex,
+        <Self as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex + Default,
     {
         /// The identifier type for an offchain worker.
         type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
@@ -135,12 +135,19 @@ pub mod pallet {
 
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
+    #[pallet::without_storage_info]
     pub struct Pallet<T>(_);
+
+	#[pallet::error]
+    pub enum Error<T> {
+        /// DataRequest Fields is too large to store on-chain.
+        TooLarge,
+    }
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T>
     where
-        T::AccountId: AsRef<[u8]> + ToHex,
+        T::AccountId: AsRef<[u8]> + ToHex + Default,
     {
         fn offchain_worker(block_number: T::BlockNumber) {
             // Note that having logs compiled to WASM may cause the size of the blob to increase
@@ -182,7 +189,7 @@ pub mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T>
     where
-        T::AccountId: AsRef<[u8]> + ToHex,
+        T::AccountId: AsRef<[u8]> + ToHex + Default,
         T: pallet_balances::Config,
     {
         #[pallet::weight(<T as Config>::WeightInfo::clear_api_queue_unsigned())]
@@ -210,7 +217,7 @@ pub mod pallet {
             let block_number = <system::Pallet<T>>::block_number();
             let current_timestamp = T::UnixTime::now().as_millis();
             for key in processed_requests.iter() {
-                if SavedRequests::<T: StorageMap>::contains_key(key.clone()) {
+                if SavedRequests::<T>::contains_key(key.clone()) {
                     let saved_request = Self::saved_data_requests(key);
                     let processed_request = DataRequest {
                         para_id: saved_request.para_id,
@@ -494,7 +501,7 @@ pub mod pallet {
     // #[pallet::metadata(T::AccountId = "AccountId")]
     pub enum Event<T: Config>
     where
-        <T as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex,
+        <T as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex + Default,
     {
         RemovedFeedAccount(Vec<u8>),
         SubmitNewData(
@@ -541,7 +548,7 @@ pub mod pallet {
     #[pallet::validate_unsigned]
     impl<T: Config> ValidateUnsigned for Pallet<T>
     where
-        T::AccountId: AsRef<[u8]> + ToHex,
+        T::AccountId: AsRef<[u8]> + ToHex + Default,
         T: pallet_balances::Config,
     {
         type Call = Call<T>;
@@ -580,7 +587,7 @@ pub mod pallet {
     #[pallet::type_value]
     pub fn InitialDataId<T: Config>() -> u64
     where
-        <T as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex,
+        <T as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex + Default,
     {
         10000000u64
     }
@@ -613,7 +620,11 @@ pub mod pallet {
         StorageMap<_, Identity, Vec<u8>, (T::AccountId, Vec<u8>), ValueQuery>;
 }
 
-#[derive(Clone, PartialEq, Eq, Encode, Decode, Default, Hash, TypeInfo)]
+// const MaxPayloadSize: u32 = 10240;
+// const MaxFeedNameSize: u32 = 128;
+// const MaxUrlSize: u32 = 1024;
+
+#[derive(Clone, PartialEq, Eq, Encode, Decode, Default, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct DataRequest<ParaId, BlockNumber, AccountId> {
     para_id: Option<ParaId>,
@@ -622,6 +633,8 @@ pub struct DataRequest<ParaId, BlockNumber, AccountId> {
     processed_block_number: Option<BlockNumber>,
     requested_timestamp: u128,
     processed_timestamp: Option<u128>,
+    // payload: BoundedVec<u8, ConstU32<MaxPayloadSize>>,
+    // feed_name: BoundedVec<u8, ConstU32<MaxFeedNameSize>>,
     payload: Vec<u8>,
     feed_name: Vec<u8>,
     is_query: bool,
@@ -777,7 +790,7 @@ enum TransactionType {
 
 impl<T: Config> Pallet<T>
 where
-    T::AccountId: AsRef<[u8]> + ToHex,
+    T::AccountId: AsRef<[u8]> + ToHex + Default,
 {
     fn ensure_account_owns_table(
         submitter_account_id: T::AccountId,
@@ -912,6 +925,11 @@ where
         let index = DataId::<T>::get();
         let block_number = <system::Pallet<T>>::block_number();
         let current_timestamp = T::UnixTime::now().as_millis();
+        // let boundedPayload =
+        // BoundedVec::<u8, ConstU32<MaxPayloadSize>>::try_from(payload).map_err(|()| Error::<T>::TooLarge)?;
+        // let boundedFeedName = 
+        // BoundedVec::<u8, ConstU32<MaxFeedNameSize>>::try_from(feed_name).map_err(|()| Error::<T>::TooLarge)?;
+
         <DataRequests<T>>::insert(
             index,
             DataRequest {

@@ -109,7 +109,7 @@ pub fn development_local_config(id: ParaId, environment: &str) -> DevelopmentCha
 					get_from_seed::<AuraId>("Bob"),
 				],
 				endowed_accounts_local(),
-				id.into(),
+				id,
 				300_000_000 * KYL
 			)
 		},
@@ -137,7 +137,7 @@ pub fn development_environment_config(id: ParaId,environment: &str) -> Developme
 					.unchecked_into()
 				],
 				endowed_accounts(),
-				id.into(),
+				id,
 				300_000_000 * KYL
 			)
 		},
@@ -171,7 +171,7 @@ pub fn pichiu_local_network(id: ParaId) -> PichiuChainSpec {
 				],
 				endowed_accounts_local(),
 				Some(50000000 * PCHU),
-				id.into(),
+				id,
 				30_000_000 * PCHU
 			)
 		},
@@ -203,7 +203,7 @@ pub fn pichiu_development_network(id: ParaId) -> PichiuChainSpec {
 				],
 				endowed_accounts(),
 				Some(50000000 * PCHU),
-				id.into(),
+				id,
 				30_000_000 * PCHU
 			)
 		},
@@ -238,7 +238,7 @@ pub fn pichiu_network(id: ParaId) -> PichiuChainSpec {
 				],
 				endowed_accounts(),
 				Some(50000000 * PCHU),
-				id.into(),
+				id,
 				30_000_000 * PCHU
 			)
 		},
