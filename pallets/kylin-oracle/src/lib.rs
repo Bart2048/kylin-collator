@@ -97,10 +97,8 @@ pub mod pallet {
     use super::*;
 
     #[pallet::config]
-    pub trait Config:
-        CreateSignedTransaction<Call<Self>> + frame_system::Config + pallet_balances::Config
-    where
-        <Self as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex + Default,
+    pub trait Config: CreateSignedTransaction<Call<Self>> + frame_system::Config + pallet_balances::Config
+    where <Self as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex
     {
         /// The identifier type for an offchain worker.
         type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
@@ -147,7 +145,7 @@ pub mod pallet {
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T>
     where
-        T::AccountId: AsRef<[u8]> + ToHex + Default,
+        T::AccountId: AsRef<[u8]> + ToHex + Decode
     {
         fn offchain_worker(block_number: T::BlockNumber) {
             // Note that having logs compiled to WASM may cause the size of the blob to increase
@@ -189,8 +187,7 @@ pub mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T>
     where
-        T::AccountId: AsRef<[u8]> + ToHex + Default,
-        T: pallet_balances::Config,
+        T::AccountId: AsRef<[u8]> + ToHex + Decode
     {
         #[pallet::weight(<T as Config>::WeightInfo::clear_api_queue_unsigned())]
         pub fn clear_api_queue_unsigned(
@@ -218,7 +215,7 @@ pub mod pallet {
             let current_timestamp = T::UnixTime::now().as_millis();
             for key in processed_requests.iter() {
                 if SavedRequests::<T>::contains_key(key.clone()) {
-                    let saved_request = Self::saved_data_requests(key);
+                    let saved_request = Self::saved_data_requests(key).unwrap();
                     let processed_request = DataRequest {
                         para_id: saved_request.para_id,
                         account_id: saved_request.account_id,
@@ -254,7 +251,7 @@ pub mod pallet {
                         //insert to api
                         <ApiQueue<T>>::insert(key, processed_request.clone());
                         let feed_owner =
-                            Self::feed_account_lookup(processed_request.feed_name.clone()).0;
+                            Self::feed_account_lookup(processed_request.feed_name.clone()).unwrap().0;
                         <FeedAccountLookup<T>>::insert(
                             processed_request.feed_name.clone(),
                             (&feed_owner, encoded_hash.clone()),
@@ -316,7 +313,7 @@ pub mod pallet {
             ensure_signed(origin.clone())?;
             let submitter_account_id = ensure_signed(origin.clone())?;
 
-            let data_request = Self::data_requests(key);
+            let data_request = Self::data_requests(key).unwrap();
             let saved_request = DataRequest {
                 para_id: data_request.para_id,
                 account_id: Some(submitter_account_id),
@@ -342,7 +339,7 @@ pub mod pallet {
             data: Vec<u8>,
         ) -> DispatchResult {
             ensure_none(origin.clone())?;
-            let data_request = Self::data_requests(key);
+            let data_request = Self::data_requests(key).unwrap();
             let saved_request = DataRequest {
                 para_id: data_request.para_id,
                 account_id: data_request.account_id,
@@ -501,7 +498,7 @@ pub mod pallet {
     // #[pallet::metadata(T::AccountId = "AccountId")]
     pub enum Event<T: Config>
     where
-        <T as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex + Default,
+        T::AccountId: AsRef<[u8]> + ToHex + Decode,
     {
         RemovedFeedAccount(Vec<u8>),
         SubmitNewData(
@@ -548,7 +545,7 @@ pub mod pallet {
     #[pallet::validate_unsigned]
     impl<T: Config> ValidateUnsigned for Pallet<T>
     where
-        T::AccountId: AsRef<[u8]> + ToHex + Default,
+        T::AccountId: AsRef<[u8]> + ToHex + Decode,
         T: pallet_balances::Config,
     {
         type Call = Call<T>;
@@ -587,7 +584,7 @@ pub mod pallet {
     #[pallet::type_value]
     pub fn InitialDataId<T: Config>() -> u64
     where
-        <T as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex + Default,
+        <T as frame_system::Config>::AccountId: AsRef<[u8]> + ToHex
     {
         10000000u64
     }
@@ -598,17 +595,17 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn data_requests)]
     pub type DataRequests<T: Config> =
-        StorageMap<_, Identity, u64, DataRequest<ParaId, T::BlockNumber, T::AccountId>, ValueQuery>;
+        StorageMap<_, Identity, u64, DataRequest<ParaId, T::BlockNumber, T::AccountId>, OptionQuery>;
 
     #[pallet::storage]
     #[pallet::getter(fn saved_data_requests)]
     pub type SavedRequests<T: Config> =
-        StorageMap<_, Identity, u64, DataRequest<ParaId, T::BlockNumber, T::AccountId>, ValueQuery>;
+        StorageMap<_, Identity, u64, DataRequest<ParaId, T::BlockNumber, T::AccountId>, OptionQuery>;
 
     #[pallet::storage]
     #[pallet::getter(fn api_queue)]
     pub type ApiQueue<T: Config> =
-        StorageMap<_, Identity, u64, DataRequest<ParaId, T::BlockNumber, T::AccountId>, ValueQuery>;
+        StorageMap<_, Identity, u64, DataRequest<ParaId, T::BlockNumber, T::AccountId>, OptionQuery>;
 
     #[pallet::storage]
     #[pallet::getter(fn next_unsigned_at)]
@@ -617,14 +614,10 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn feed_account_lookup)]
     pub(super) type FeedAccountLookup<T: Config> =
-        StorageMap<_, Identity, Vec<u8>, (T::AccountId, Vec<u8>), ValueQuery>;
+        StorageMap<_, Identity, Vec<u8>, (T::AccountId, Vec<u8>), OptionQuery>;
 }
 
-// const MaxPayloadSize: u32 = 10240;
-// const MaxFeedNameSize: u32 = 128;
-// const MaxUrlSize: u32 = 1024;
-
-#[derive(Clone, PartialEq, Eq, Encode, Decode, Default, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct DataRequest<ParaId, BlockNumber, AccountId> {
     para_id: Option<ParaId>,
@@ -642,18 +635,10 @@ pub struct DataRequest<ParaId, BlockNumber, AccountId> {
 }
 
 impl<BlockNumber, ParaId, AccountId> DataRequest<ParaId, BlockNumber, AccountId>
-where
-    BlockNumber: Clone + sp_std::fmt::Debug + Default + UniqueSaturatedInto<u32>,
-    ParaId: Copy + Default + From<u32> + Into<u32>,
-    AccountId: Encode
-        + Default
-        + Encode
-        + Clone
-        + Eq
-        + PartialEq
-        + sp_std::fmt::Debug
-        + AsRef<[u8]>
-        + ToHex,
+where 
+    AccountId: AsRef<[u8]> + Clone, 
+    BlockNumber: Clone + UniqueSaturatedInto<u32> + sp_std::fmt::Debug, 
+    ParaId: Into<u32> + Copy
 {
     fn to_json_string(&self, encoded_value: Vec<u8>) -> Vec<u8> {
         let mut object_elements = Vec::new();
@@ -789,8 +774,7 @@ enum TransactionType {
 }
 
 impl<T: Config> Pallet<T>
-where
-    T::AccountId: AsRef<[u8]> + ToHex + Default,
+where T::AccountId: AsRef<[u8]>
 {
     fn ensure_account_owns_table(
         submitter_account_id: T::AccountId,
@@ -798,7 +782,7 @@ where
     ) -> DispatchResult {
         let feed_exists = FeedAccountLookup::<T>::contains_key(feed_name.clone());
         if feed_exists {
-            let feed_owner = Self::feed_account_lookup(feed_name).0;
+            let feed_owner = Self::feed_account_lookup(feed_name).unwrap().0;
             if feed_owner == submitter_account_id {
                 Ok(())
             } else {
@@ -818,7 +802,7 @@ where
     ) -> DispatchResult {
         let feed_exists = FeedAccountLookup::<T>::contains_key(feed_name.clone());
         if feed_exists {
-            let feed = Self::feed_account_lookup(feed_name.clone());
+            let feed = Self::feed_account_lookup(feed_name.clone()).unwrap();
             let latest_hash = feed.1;
             let api_url = str::from_utf8(b"https://api.kylin-node.co.uk/query?hash=").unwrap();
             let url = api_url.clone().to_owned() + str::from_utf8(&latest_hash.clone()).unwrap();
@@ -967,7 +951,7 @@ where
     ) -> () {
         let current_timestamp = T::UnixTime::now().as_millis();
         let saved_data_request = DataRequest {
-            para_id: data_request.para_id,
+            para_id: data_request.para_id.clone(),
             account_id: data_request.account_id.clone(),
             feed_name: data_request.feed_name.clone(),
             requested_block_number: data_request.requested_block_number,
@@ -982,7 +966,7 @@ where
     }
 
     fn send_response_to_parachain(block_number: T::BlockNumber, key: u64) -> DispatchResult {
-        let saved_request = Self::saved_data_requests(key);
+        let saved_request = Self::saved_data_requests(key).unwrap();
         if saved_request.para_id.is_some() {
             match T::XcmSender::send_xcm(
                 (
