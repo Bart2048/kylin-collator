@@ -25,6 +25,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use sp_api::impl_runtime_apis;
 use sp_core::OpaqueMetadata;
 use sp_runtime::{
+	create_runtime_str,
 	generic::Era,
 	generic, impl_opaque_keys,
 	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, Verify, Extrinsic as ExtrinsicT, ConvertInto},
@@ -520,6 +521,7 @@ impl pallet_utility::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
 	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+	type PalletsOrigin = OriginCaller;
 }
 
 
@@ -540,7 +542,8 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type MaxProposals = CouncilMaxProposals;
 	type MaxMembers = CouncilMaxMembers;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = weights::pallet_collective_council::WeightInfo<Runtime>;
+	type WeightInfo = ();
+	// type WeightInfo = weights::pallet_collective_council::WeightInfo<Runtime>;
 }
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = NORMAL_DISPATCH_RATIO * RuntimeBlockWeights::get().max_block;
@@ -573,7 +576,8 @@ impl pallet_scheduler::Config for Runtime {
 	type MaximumWeight = MaximumSchedulerWeight;
 	type ScheduleOrigin = EnsureRoot<AccountId>;
 	type MaxScheduledPerBlock = MaxScheduledPerBlock;
-	type WeightInfo = weights::pallet_scheduler::WeightInfo<Runtime>;
+	// type WeightInfo = weights::pallet_scheduler::WeightInfo<Runtime>;
+	type WeightInfo = ();
 	type PreimageProvider = Preimage;
     type NoPreimagePostponement = NoPreimagePostponement;
 	type OriginPrivilegeCmp = EqualPrivilegeOnly;
@@ -694,7 +698,7 @@ construct_runtime! {
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 30,
 		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>} = 31,
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>} = 32,
-		Scheduler: pallet_scheduler::{Pallet, Storage, Config, Event<T>, Call} = 33,
+		Scheduler: pallet_scheduler::{Pallet, Storage, Event<T>, Call} = 33,
 		Utility: pallet_utility::{Pallet, Call, Event} = 34,
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 35,
         Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>} = 36,
